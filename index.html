@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>localgit</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 0; }
+        header { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 16px; margin: 0; color: #f0f6fc; display: flex; align-items: center; gap: 8px; }
+        header h1 svg { fill: #f0f6fc; }
+        .container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+        .actions-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #30363d; padding-bottom: 16px; }
+        .search-input { flex-grow: 1; background-color: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 12px; font-size: 14px; border-radius: 6px; outline: none; }
+        .search-input:focus { border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3); }
+        .btn { background-color: #238636; color: #ffffff; border: 1px solid rgba(240,246,252,0.1); padding: 8px 16px; font-weight: 500; font-size: 14px; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap; }
+        .btn:hover { background-color: #2ea043; }
+        .notification { background-color: #1f6feb; color: #ffffff; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; display: none; align-items: center; justify-content: space-between; border: 1px solid #388bfd; }
+        .notification.error { background-color: #da3633; border-color: #f85149; }
+        .repo-card { background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .repo-info a { color: #58a6ff; font-size: 18px; font-weight: 600; text-decoration: none; }
+        .repo-info a:hover { text-decoration: underline; }
+        .repo-meta { font-size: 12px; color: #8b949e; margin-top: 4px; }
+        .url-box { display: flex; align-items: center; background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 4px 8px; gap: 8px; }
+        .url-box input { background: transparent; border: none; color: #c9d1d9; font-family: monospace; font-size: 12px; width: 280px; outline: none; }
+        .copy-btn { background-color: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 4px 10px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .copy-btn:hover { background-color: #30363d; border-color: #8b949e; }
+        .empty-state { text-align: center; padding: 48px; color: #8b949e; background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <svg height="24" width="24" viewBox="0 0 16 16" version="1.1"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+            LocalGit
+        </h1>
+        <span style="font-size: 13px; color: #8b949e;">Running on http://localhost:8080</span>
+    </header>
+
+    <div class="container">
+        <div id="notification" class="notification"></div>
+
+        <div class="actions-bar">
+            <input type="text" id="repo-input" class="search-input" placeholder="Find a repository or type name for a new one..." oninput="filterRepos()">
+            <button class="btn" onclick="createNewRepo()">New repository</button>
+        </div>
+
+        <div id="repo-list">
+            {{repo_list_html}}
+        </div>
+    </div>
+
+    <script>
+        function copyUrl(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                let originalText = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        }
+
+        function showNotification(message, isError = false) {
+            let note = document.getElementById('notification');
+            note.innerText = message;
+            note.className = 'notification' + (isError ? ' error' : '');
+            note.style.display = 'flex';
+            setTimeout(() => { note.style.display = 'none'; }, 6000);
+        }
+
+        function filterRepos() {
+            let filterVal = document.getElementById('repo-input').value.toLowerCase().trim();
+            let cards = document.getElementsByClassName('repo-card');
+            
+            for (let i = 0; i < cards.length; i++) {
+                let repoName = cards[i].getAttribute('data-name').toLowerCase();
+                if (repoName.includes(filterVal)) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
+        async function createNewRepo() {
+            let inputField = document.getElementById('repo-input');
+            let name = inputField.value.trim();
+            if (!name) {
+                showNotification("Please enter a repository name in the input box above first.", true);
+                return;
+            }
+            name = name.replace(/\.git$/, '');
+            let fullRepoName = name + '.git';
+
+            try {
+                let response = await fetch('/new/' + fullRepoName, { method: 'POST' });
+                let result = await response.text();
+                
+                if (response.ok) {
+                    showNotification(`Repository '${fullRepoName}' is ready at http://localhost:8080/${fullRepoName}`);
+                    inputField.value = '';
+                    filterRepos();
+
+                    // Dynamically append the new repository card to the list if not already present
+                    let repoList = document.getElementById('repo-list');
+                    let existingCard = document.querySelector(`[data-name="${fullRepoName}"]`);
+                    if (!existingCard) {
+                        // Remove empty state if it was showing
+                        let emptyState = repoList.querySelector('.empty-state');
+                        if (emptyState) emptyState.remove();
+
+                        let repoUrl = `http://localhost:8080/${fullRepoName}`;
+                        let newCard = document.createElement('div');
+                        newCard.className = 'repo-card';
+                        newCard.setAttribute('data-name', fullRepoName);
+                        newCard.innerHTML = `
+                            <div class="repo-info">
+                                <a href="/${fullRepoName}/info/refs?service=git-upload-pack">${fullRepoName}</a>
+                                <div class="repo-meta">Bare repository on disk (C:/gittest/${fullRepoName})</div>
+                            </div>
+                            <div class="url-box">
+                                <input type="text" readonly value="${repoUrl}" id="url-${fullRepoName}">
+                                <button class="copy-btn" onclick="copyUrl('${repoUrl}', this)">Copy</button>
+                            </div>
+                        `;
+                        repoList.prepend(newCard);
+                    }
+                } else {
+                    showNotification("Failed to create repository: " + result, true);
+                }
+            } catch (err) {
+                showNotification("Network error while creating repository.", true);
+            }
+        }
+    </script>
+</body>
+</html>
