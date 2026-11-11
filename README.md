@@ -1,10 +1,10 @@
-# LocalGit
+# LocalGit 
 
-LocalGit is a zero-dependency local Git server powered by Python and `git-http-backend`, featuring a responsive, GitHub-styled dashboard for managing and creating repositories locally.
+> A zero-dependency local Git server powered by Python and `git-http-backend`, featuring a responsive, GitHub-styled dashboard for managing and creating repositories locally.
 
 ---
 
-## 💡 The Idea Behind LocalGit
+## The Idea Behind LocalGit
 
 Most self-hosted Git solutions (like Gitea, GitLab, or full-blown server setups) are heavy, require external databases, or take too much configuration to run locally. 
 
@@ -12,7 +12,7 @@ Most self-hosted Git solutions (like Gitea, GitLab, or full-blown server setups)
 
 ---
 
-## 🛠️ Setup Guide
+## Setup Guide
 
 ### 1. Prerequisites
 Ensure you have the following installed and added to your system's PATH:
@@ -43,15 +43,15 @@ C:\localgit\
 1. Open your terminal or Command Prompt inside `C:\localgit`
 2. Run the server script:
 ```bash
-python git_server.py
+python localgit-server.py
 ```
-3. The server will boot up on http://localhost:8080 and automatically open your default web browser to the LocalGit dashboard.
+3. The server will boot up on http://localhost:8080 open your default web browser to the LocalGit dashboard.
 <img width="1012" height="306" alt="image" src="https://github.com/user-attachments/assets/e2261ee1-5d3a-4ee6-9ab7-69dee8b6d4bc" />
 
 ### Using the Dashboard
 #### Searching Repositories
-- Type any keyword into the top input field ("Find a repository or type name for a new one...").
-- The repository list below will filter dynamically in real-time as you type.
+1. Type any keyword into the top input field ("Find a repository or type name for a new one...").
+2. The repository list below will filter dynamically in real-time as you type.
 
 #### Creating New Repositories
 1. Type your desired repository name into the same top input field (e.g., my-cool-project).
@@ -75,3 +75,5 @@ git remote add origin http://localhost:8080/my-cool-project.git
 # 4. Push your code (this will automatically sync and push to your local server)
 git push -u origin master
 ```
+
+---
